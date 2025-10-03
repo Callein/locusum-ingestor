@@ -1,0 +1,9 @@
+blank_issues_enabled: false  # Disable "Create blank issue" button
+
+#contact_links:
+#  - name: 🔗 LocuSum Related Repositories
+#    url:
+#    about: "List of repositories related to the LocuSum project."
+#  - name: 📑 LocuSum Project
+#    url:
+#    about: "This is the project board for managing the LocuSum project."
