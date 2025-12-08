@@ -13,6 +13,11 @@ ITEM_PIPELINES = {
    "locusum_ingestor.pipelines.LocusumIngestorPipeline": 300,
 }
 
+# Downloader Middlewares
+DOWNLOADER_MIDDLEWARES = {
+   'locusum_ingestor.middlewares.DuplicateCheckMiddleware': 543,
+}
+
 # Scrapy-Playwright Configuration
 DOWNLOAD_HANDLERS = {
     "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
