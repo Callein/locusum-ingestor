@@ -11,7 +11,8 @@ __pycache__/
 node_modules/
 # Docker artifacts
 Dockerfile
-docker-compose.yml
+# docker-compose.yml
+pg_data/
 # Logs
 logs/
 *.log
