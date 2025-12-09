@@ -33,32 +33,6 @@
     - `fetched_at`: 수집 시각
     - `status`: 상태 (기본값 'NEW')
 
-## 3. 실행 방법 (Usage)
-
-### 3.1 개별 사이트 크롤링
-터미널에서 다음 명령어를 실행하여 특정 사이트를 수집할 수 있습니다.
-
-```bash
-# Texas Tribune
-scrapy crawl texas_tribune
-
-# Dallas News
-scrapy crawl dallas_news
-
-# Houston Chronicle (Playwright 필요)
-scrapy crawl houston_chronicle
-
-# Community Impact
-scrapy crawl community_impact
-```
-
-### 3.2 테스트 (Testing)
-작성된 스파이더들의 파싱 로직을 검증하려면 다음 명령어를 실행합니다.
-
-```bash
-python3 -m unittest tests/test_spiders.py
-```
-
 ## 4. 수집 기간 및 범위 (Crawling Period & Scope)
 
 현재 구현된 스크래퍼들은 **"최신 뉴스(Latest News)"** 수집을 목적으로 설계되었습니다.
