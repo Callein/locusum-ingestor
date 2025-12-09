@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Database Configuration
-SQLITE_FILE_NAME = os.getenv("SQLITE_FILE_NAME", "locusum_buffer.db")
+SQLITE_FILE_NAME = os.getenv("SQLITE_FILE_NAME", "data/locusum_buffer.db")
 SQLITE_URL = f"sqlite:///{SQLITE_FILE_NAME}"
 
 engine = create_engine(SQLITE_URL, echo=False)
