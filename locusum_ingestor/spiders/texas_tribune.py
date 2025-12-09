@@ -43,4 +43,7 @@ class TexasTribuneSpider(scrapy.Spider):
             # Fallback to entry-content
             item["html_content"] = response.css('div.entry-content').get()
 
-        yield item
+        if item["html_content"]:
+            yield item
+        else:
+            self.logger.warning(f"Skipping non-article page: {response.url}")

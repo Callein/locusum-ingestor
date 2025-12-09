@@ -38,15 +38,26 @@ def run_worker():
     sqlite_session = get_sqlite_session()
     pg_session = get_pg_session()
 
+    idle_count = 0
+    MAX_IDLE_RETRIES = 3
+
     while True:
         try:
             # Fetch batch of 10
             raw_articles = sqlite_session.query(RawArticle).filter(RawArticle.status == "NEW").limit(10).all()
             
             if not raw_articles:
-                logger.info("No new articles. Sleeping for 10s...")
+                idle_count += 1
+                if idle_count >= MAX_IDLE_RETRIES:
+                    logger.info(f"No new articles found for {MAX_IDLE_RETRIES} consecutive checks. Worker exiting gracefully.")
+                    break
+                
+                logger.info(f"No new articles (Idle {idle_count}/{MAX_IDLE_RETRIES}). Sleeping for 10s...")
                 time.sleep(10)
                 continue
+            
+            # Reset idle count on successful fetch
+            idle_count = 0
             
             logger.info(f"Processing batch of {len(raw_articles)} articles...")
             

@@ -30,7 +30,7 @@ class Article(SQLModel, table=True):
     published_at: Optional[datetime] = None
     
     # pgvector embedding column (1536 dims for OpenAI)
-    embedding: Optional[list[float]] = Field(default=None, sa_column=Column(Vector(1536)))
+    embedding: Optional[list[float]] = Field(default=None, sa_column=Column(Vector(768)))
     
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
