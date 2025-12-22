@@ -82,6 +82,9 @@ def run_worker():
                             raw_id=raw.id,
                             url=raw.url,
                             source=raw.source,
+                            region=raw.region,
+                            author=raw.author,
+                            image_url=raw.image_url,
                             title=raw.title,
                             content=clean_text,
                             published_at=raw.fetched_at # Approximate
@@ -108,6 +111,11 @@ def run_worker():
             break
         except Exception as e:
             logger.error(f"Worker loop error: {e}")
+            try:
+                sqlite_session.rollback()
+                pg_session.rollback()
+            except Exception as rollback_error:
+                 logger.error(f"Rollback failed: {rollback_error}")
             time.sleep(5)
 
 if __name__ == "__main__":

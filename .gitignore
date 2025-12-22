@@ -10,7 +10,7 @@ __pycache__/
 .vscode/
 node_modules/
 # Docker artifacts
-Dockerfile
+# Dockerfile
 # docker-compose.yml
 pg_data/
 # Logs
