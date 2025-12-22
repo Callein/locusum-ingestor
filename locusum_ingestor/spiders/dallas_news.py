@@ -24,19 +24,61 @@ class DallasNewsSpider(scrapy.Spider):
         item = RawArticleItem()
         item["url"] = response.url
         item["source"] = "Dallas News"
+        item["region"] = "Dallas"
         
-        title = response.css('h1::text').get()
+        # Title
+        # User reported null title. H1 might have nested spans. 
+        # Using xpath string() to get all text inside H1.
+        title = response.xpath('string(//h1)').get()
         item["title"] = title.strip() if title else None
 
-        # Content extraction - attempting to target the main article body
-        # Common classes: .article-body, .article-content, or generic paragraphs
-        content = response.css('div.article-body').get()
-        if not content:
-            # Fallback
-            content = response.css('article').get()
+        # Author & Image
+        # Author & Image
+        # 1. Try JSON-LD (Most Reliable)
+        import json
+        ld_json_scripts = response.css('script[type="application/ld+json"]::text').getall()
+        for script in ld_json_scripts:
+            try:
+                data = json.loads(script)
+                if isinstance(data, dict):
+                     # Type often "NewsArticle" or "ReportageNewsArticle"
+                     if "author" in data:
+                         authors = data["author"]
+                         if isinstance(authors, list) and len(authors) > 0:
+                             item["author"] = authors[0].get("name")
+                             break
+                         elif isinstance(authors, dict):
+                             item["author"] = authors.get("name")
+                             break
+            except:
+                continue
+
+        # 2. Fallback to CSS selectors if JSON-LD author missing
+        if not item["author"]:
+            # Author: a tag with cmp-ltrk="Article - Byline" or inside byline-module
+            item["author"] = response.css('a[cmp-ltrk="Article - Byline"]::text').get()
+        if not item["author"]:
+            item["author"] = response.css('div[class*="byline-module"]::text').get()
+        if not item["author"]:
+             item["author"] = response.css('meta[name="author"]::attr(content)').get()
         
-        if not content:
-             content = response.css('body').get()
+        item["image_url"] = response.css('meta[property="og:image"]::attr(content)').get()
+
+        # Content extraction
+        # Browser inspection showed content is in 'p.body-text-paragraph' elements.
+        # We can join them or find their container.
+        # Let's try to get the container first, often a section.
+        content_lines = response.css('p.body-text-paragraph').getall()
+        if content_lines:
+             # If we found paragraphs, join them or wrap in a div
+             content = "<div>" + "".join(content_lines) + "</div>"
+        else:
+            # Fallback
+            content = response.css('div.article-body').get()
+            if not content:
+                content = response.css('article').get()
+            if not content:
+                 content = response.css('section').get()
 
         item["html_content"] = content
         yield item

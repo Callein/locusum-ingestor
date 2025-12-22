@@ -61,10 +61,15 @@ class HoustonChronicleSpider(scrapy.Spider):
         item = RawArticleItem()
         item["url"] = response.url
         item["source"] = "Houston Chronicle"
+        item["region"] = "Houston"
         
         title = response.css('h1::text').get()
         item["title"] = title.strip() if title else None
         
+        # Author & Image
+        item["author"] = response.css('meta[name="author"]::attr(content)').get() or response.css('.author-name::text').get()
+        item["image_url"] = response.css('meta[property="og:image"]::attr(content)').get()
+
         # Content
         # Hearst sites often use .article-body or section.body
         content = response.css('section.body').get()

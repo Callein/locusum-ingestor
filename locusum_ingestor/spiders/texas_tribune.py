@@ -24,12 +24,23 @@ class TexasTribuneSpider(scrapy.Spider):
         item = RawArticleItem()
         item["url"] = response.url
         item["source"] = "Texas Tribune"
+        item["region"] = "Texas"
         
         # Title
         title = response.css('h1.entry-title::text').get()
         if not title:
             title = response.css('h1::text').get()
         item["title"] = title.strip() if title else None
+
+        # Author
+        author = response.css('meta[name="author"]::attr(content)').get()
+        if not author:
+            author = response.css('p.byline a::text').get()
+        item["author"] = author
+
+        # Image
+        image = response.css('meta[property="og:image"]::attr(content)').get()
+        item["image_url"] = image
 
         # HTML Content
         # We prefer the republish content if available as it's cleaner
