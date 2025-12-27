@@ -16,3 +16,9 @@ pg_data/
 # Logs
 logs/
 *.log
+
+# JetBrains IDE settings
+.idea/
+*.iml
+out/
+gen/
