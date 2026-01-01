@@ -5,7 +5,7 @@ import os
 from sqlalchemy import text
 from loguru import logger
 from locusum_ingestor.models.main_db import get_session, Article
-from locusum_ingestor.services.ai_service import AIService
+from locusum_ingestor.services.ai_service import get_ai_service
 from sqlmodel import select
 
 def run_ai_worker():
@@ -15,10 +15,10 @@ def run_ai_worker():
     2. Generate Summary & Embedding via AIService.
     3. Update DB.
     """
-    logger.info("Starting Locusum AI Worker (Gemini)...")
+    logger.info("Starting Locusum AI Worker...")
     
     try:
-        ai_service = AIService()
+        ai_service = get_ai_service()
         logger.info("AIService initialized successfully.")
     except Exception as e:
         logger.error(f"Failed to initialize AIService: {e}")
@@ -31,8 +31,8 @@ def run_ai_worker():
     while True:
         try:
             # Fetch batch of 10 articles that need processing
-            # Using raw SQL filter for NULL check or SQLModel expression
-            statement = select(Article).where(Article.summary == None).limit(10)
+            # Check for missing summary OR missing embedding
+            statement = select(Article).where((Article.summary == None) | (Article.embedding == None)).limit(10)
             articles = session.exec(statement).all()
             
             if not articles:
@@ -52,27 +52,40 @@ def run_ai_worker():
             
             for article in articles:
                 try:
-                    # 1. Summarize
-                    if not article.content:
-                        logger.warning(f"Skipping empty content article ID {article.id}")
-                        continue
-                        
-                    summary = ai_service.summarize(article.content)
-                    if not summary:
-                        logger.warning(f"Summary generation failed for ID {article.id}")
-                        # Mark as processed or failed? avoiding infinite loop is hard without status.
-                        # For now, let's set a placeholder or specific retry logic.
-                        # Setting placeholder to avoid re-fetch loop for now.
-                        summary = "(Summary Failed)"
+                    summary_updated = False
+                    embedding_updated = False
 
-                    # 2. Embed
-                    embedding = ai_service.embed(article.content)
-                    if not embedding:
-                        logger.warning(f"Embedding generation failed for ID {article.id}")
+                    # 1. Summarize (if missing or failed)
+                    if not article.summary or article.summary == "(Summary Failed)":
+                        if not article.content:
+                            logger.warning(f"Skipping empty content article ID {article.id}")
+                            continue
+
+                        summary = ai_service.summarize(article.content)
+                        if not summary:
+                            logger.warning(f"Summary generation failed for ID {article.id}. Skipping DB update (will retry).")
+                        else:
+                            article.summary = summary
+                            summary_updated = True
+
+                    # 2. Embed (if missing)
+                    if not article.embedding:
+                        # Ensure we have content to embed
+                        if not article.content:
+                             continue
+
+                        embedding = ai_service.embed(article.content)
+                        if not embedding:
+                            logger.warning(f"Embedding generation failed for ID {article.id}. Will retry.")
+                        else:
+                            article.embedding = embedding
+                            embedding_updated = True
                     
-                    # 3. Update DB
-                    article.summary = summary
-                    article.embedding = embedding
+                    # 3. Update DB only if changes were made
+                    if summary_updated or embedding_updated:
+                        session.add(article)
+                        session.commit()
+                        logger.info(f"Enriched Article ID {article.id}: Summary={summary_updated}, Embedding={embedding_updated}")
                     
                     session.add(article)
                     session.commit()
@@ -90,6 +103,10 @@ def run_ai_worker():
             break
         except Exception as e:
             logger.error(f"AI Worker loop error: {e}")
+            try:
+                session.rollback()
+            except Exception as rb_ex:
+                logger.error(f"Failed to rollback session: {rb_ex}")
             time.sleep(5)
 
 if __name__ == "__main__":

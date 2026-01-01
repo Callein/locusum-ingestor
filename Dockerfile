@@ -19,4 +19,4 @@ COPY . .
 ENV PYTHONPATH=/app
 
 # Default command (can be overridden)
-CMD ["python", "-m", "locusum_ingestor.worker"]
+CMD ["python", "-m", "locusum_ingestor.runner"]

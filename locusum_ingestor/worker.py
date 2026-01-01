@@ -49,8 +49,9 @@ def run_worker():
             if not raw_articles:
                 idle_count += 1
                 if idle_count >= MAX_IDLE_RETRIES:
-                    logger.info(f"No new articles found for {MAX_IDLE_RETRIES} consecutive checks. Worker exiting gracefully.")
-                    break
+                    logger.info(f"No new articles found. Sleeping for 10s...")
+                    time.sleep(10)
+                    idle_count = 0 # Reset or just keep sleeping, logic change needed
                 
                 logger.info(f"No new articles (Idle {idle_count}/{MAX_IDLE_RETRIES}). Sleeping for 10s...")
                 time.sleep(10)
