@@ -9,6 +9,35 @@ scrapy crawl texas_tribune
 
 # Dallas News
 scrapy crawl dallas_news
+```
+
+## AI Configuration (Gemini vs Ollama)
+
+LocuSum Ingestor supports both Google Gemini and Ollama for AI enrichment (Summarization & Embeddings).
+
+### 1. Gemini (Default)
+Ensure `GOOGLE_API_KEY` is set in `.env`.
+```bash
+LLM_PROVIDER=gemini
+GOOGLE_API_KEY=your_key_here
+```
+
+### 2. Ollama
+To use a local Ollama instance:
+1.  Set `LLM_PROVIDER=ollama` in `.env`.
+2.  Configure the URL and Model:
+    ```bash
+    OLLAMA_BASE_URL=http://host.docker.internal:11434
+    OLLAMA_MODEL=llama3
+    ```
+3.  **Important**: You must pull the models in Ollama first:
+    ```bash
+    ollama pull llama3
+    ollama pull nomic-embed-text
+    ```
+
+# Community Impact
+scrapy crawl community_impact
 
 # Houston Chronicle (Playwright 필요)
 scrapy crawl houston_chronicle
